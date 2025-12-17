@@ -18,20 +18,8 @@ var VaultPath = "/Users/trevornance/Documents/My Vault/Daily Writing/"
 
 func main() {
 
-	extension := ".md"
-	entry := os.Args[1:]
-	currentDateTime := time.Now()
-	formattedDate := currentDateTime.Format("2006-01-02")
-	formattedTime := currentDateTime.Format("15:04")
-	entryToSave := strings.Join(entry, " ")
-	fullPath := VaultPath + formattedDate + extension
-
-	newFile := FileInfo{
-		content:   entryToSave,
-		title:     formattedDate,
-		fullPath:  fullPath,
-		entryTime: formattedTime,
-	}
+	fDate, fTime := getDateTime()
+	newFile := createNewFileStruct(fDate, fTime)
 
 	writeToFile(newFile)
 }
@@ -48,4 +36,26 @@ func writeToFile(f FileInfo) {
 	defer file.Close()
 
 	file.WriteString("-[" + f.entryTime + "] " + f.content + "\n\n")
+}
+
+func getDateTime() (fTime, fDate string) {
+	currentDateTime := time.Now()
+	formattedDate := currentDateTime.Format("2006-01-02")
+	formattedTime := currentDateTime.Format("15:04")
+	return formattedTime, formattedDate
+}
+
+func createNewFileStruct(time, date string) FileInfo {
+	extension := ".md"
+	entry := os.Args[1:]
+	entryToSave := strings.Join(entry, " ")
+	fullPath := VaultPath + date + extension
+
+	newFile := FileInfo{
+		content:   entryToSave,
+		title:     date,
+		fullPath:  fullPath,
+		entryTime: time,
+	}
+	return newFile
 }
