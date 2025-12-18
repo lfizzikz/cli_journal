@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -12,6 +13,7 @@ type FileInfo struct {
 	title     string
 	fullPath  string
 	entryTime string
+	tags      string
 }
 
 var VaultPath = "/Users/trevornance/Documents/My Vault/Daily Writing/"
@@ -20,7 +22,6 @@ func main() {
 
 	fDate, fTime := getDateTime()
 	newFile := createNewFileStruct(fDate, fTime)
-
 	writeToFile(newFile)
 }
 
@@ -34,8 +35,8 @@ func writeToFile(f FileInfo) {
 		fmt.Printf("Error: %s\nFile: %s", err, f.title)
 	}
 	defer file.Close()
-
-	file.WriteString("-[" + f.entryTime + "] " + f.content + "\n\n")
+	contentToWrite := fmt.Sprintf("- [%s] %s #%s\n\n", f.entryTime, f.content, f.tags)
+	file.WriteString(contentToWrite)
 }
 
 func getDateTime() (fTime, fDate string) {
@@ -46,16 +47,19 @@ func getDateTime() (fTime, fDate string) {
 }
 
 func createNewFileStruct(time, date string) FileInfo {
+	tagsFlag := flag.String("tag", "", "Will append #{tag} to end of entry")
+	flag.Parse()
+	tags := *tagsFlag
 	extension := ".md"
-	entry := os.Args[1:]
-	entryToSave := strings.Join(entry, " ")
+	entry := strings.Join(flag.Args(), " ")
 	fullPath := VaultPath + date + extension
 
 	newFile := FileInfo{
-		content:   entryToSave,
+		content:   entry,
 		title:     date,
 		fullPath:  fullPath,
 		entryTime: time,
+		tags:      tags,
 	}
 	return newFile
 }
