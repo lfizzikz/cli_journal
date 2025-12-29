@@ -16,10 +16,10 @@ type FileInfo struct {
 	tags      string
 }
 
-var VaultPath = "/Users/trevornance/Documents/My Vault/Daily Writing/"
+const VaultPath = "/Users/trevornance/Documents/My Vault/Daily Writing/"
 
 func main() {
-
+	searchFlag := flag.String("search", "", "search file contents. {date}, {from}, {to}, {[tags]}, {[query]}")
 	fDate, fTime := getDateTime()
 	newFile := createNewFileStruct(fDate, fTime)
 	writeToFile(newFile)
