@@ -1,10 +1,8 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -19,10 +17,39 @@ type FileInfo struct {
 const VaultPath = "/Users/trevornance/Documents/My Vault/Daily Writing/"
 
 func main() {
-	searchFlag := flag.String("search", "", "search file contents. {date}, {from}, {to}, {[tags]}, {[query]}")
-	fDate, fTime := getDateTime()
-	newFile := createNewFileStruct(fDate, fTime)
-	writeToFile(newFile)
+	if len(os.Args) < 2 {
+		fmt.Println("expected command: search | add")
+		os.Exit(1)
+	}
+
+	switch os.Args[1] {
+	case "search":
+		opts, err := ParseSearchFlags(os.Args[2:])
+		if err != nil {
+			fmt.Println("error after parse search:", err)
+			os.Exit(1)
+		}
+
+		files, err := FilesToSearch(opts)
+		if err != nil {
+			fmt.Println("error after finding files to search:", err)
+			os.Exit(1)
+		}
+		if len(files) == 0 {
+			fmt.Println("no files found.")
+		} else {
+			fmt.Println(files)
+		}
+	case "add":
+		tag, body, err := ParseAddFlags(os.Args[2:])
+		if err != nil {
+			fmt.Println("add parse error:", err)
+			os.Exit(1)
+		}
+		fTime, fDate := getDateTime()
+		newFile := createNewFileStruct(fTime, fDate, body, tag)
+		writeToFile(newFile)
+	}
 }
 
 func writeToFile(f FileInfo) {
@@ -35,8 +62,13 @@ func writeToFile(f FileInfo) {
 		fmt.Printf("Error: %s\nFile: %s", err, f.title)
 	}
 	defer file.Close()
-	contentToWrite := fmt.Sprintf("- [%s] %s #%s\n\n", f.entryTime, f.content, f.tags)
-	file.WriteString(contentToWrite)
+	if f.tags != "" {
+		contentToWrite := fmt.Sprintf("- [%s] %s #%s\n\n", f.entryTime, f.content, f.tags)
+		file.WriteString(contentToWrite)
+	} else {
+		contentToWrite := fmt.Sprintf("- [%s] %s\n\n", f.entryTime, f.content)
+		file.WriteString(contentToWrite)
+	}
 }
 
 func getDateTime() (fTime, fDate string) {
@@ -46,12 +78,8 @@ func getDateTime() (fTime, fDate string) {
 	return formattedTime, formattedDate
 }
 
-func createNewFileStruct(time, date string) FileInfo {
-	tagsFlag := flag.String("tag", "", "Will append #{tag} to end of entry")
-	flag.Parse()
-	tags := *tagsFlag
+func createNewFileStruct(time, date, entry, tags string) FileInfo {
 	extension := ".md"
-	entry := strings.Join(flag.Args(), " ")
 	fullPath := VaultPath + date + extension
 
 	newFile := FileInfo{
