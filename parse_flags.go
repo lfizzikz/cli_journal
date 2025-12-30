@@ -13,6 +13,7 @@ func ParseSearchFlags(args []string) (SearchOptions, error) {
 	var queryList string
 
 	fs.StringVar(&opts.Date, "date", "", "search a specified date (YYYY-MM-DD)")
+	fs.StringVar(&opts.Year, "year", "", "search a specified year (YYYY)")
 	fs.StringVar(&opts.From, "from", "", "search from date (YYYY-MM-DD)")
 	fs.StringVar(&opts.To, "to", "", "search up to date (YYYY-MM-DD)")
 	fs.StringVar(&tagsList, "tags", "", "search tags, comma-seperated (work, random)")

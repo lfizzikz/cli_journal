@@ -9,6 +9,7 @@ import (
 
 type SearchOptions struct {
 	Date  string
+	Year  string
 	From  string
 	To    string
 	Tags  []string
@@ -18,9 +19,10 @@ type SearchOptions struct {
 func FilesToSearch(opts SearchOptions) ([]string, error) {
 	var filestoSearch []string
 	var dateSearch time.Time
+	var yearSearch time.Time
 	var toSearch time.Time
 	var fromSearch time.Time
-	var hasDate, hasTo, hasFrom bool
+	var hasDate, hasTo, hasFrom, hasYear bool
 	files, err := os.ReadDir(VaultPath)
 	if err != nil {
 		return []string{}, err
@@ -31,6 +33,13 @@ func FilesToSearch(opts SearchOptions) ([]string, error) {
 			fmt.Println("date parse failed:", err)
 		}
 		hasDate = true
+	}
+	if opts.Year != "" {
+		yearSearch, err = time.Parse("2006", opts.Year)
+		if err != nil {
+			fmt.Println("year parse failed:", err)
+		}
+		hasYear = true
 	}
 	if opts.To != "" {
 		toSearch, err = time.Parse("2006-01-02", opts.To)
@@ -72,6 +81,10 @@ func FilesToSearch(opts SearchOptions) ([]string, error) {
 			}
 		case hasFrom:
 			if fileDate.After(fromSearch) {
+				filestoSearch = append(filestoSearch, filename)
+			}
+		case hasYear:
+			if fileDate.Year() == yearSearch.Year() {
 				filestoSearch = append(filestoSearch, filename)
 			}
 		}
