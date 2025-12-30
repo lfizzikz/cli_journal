@@ -31,16 +31,25 @@ func ParseSearchFlags(args []string) (SearchOptions, error) {
 	return opts, nil
 }
 
-func ParseAddFlags(args []string) (tag string, body string, err error) {
+func ParseAddFlags(args []string) (tag []string, body string, err error) {
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
+	tagCSV := ""
 
-	fs.StringVar(&tag, "tag", "", "Will append #{tag} to end of entry")
+	fs.StringVar(&tagCSV, "tag", "", "Will append #{tag} to end of entry")
 
 	if err := fs.Parse(args); err != nil {
-		return "", "", err
+		return []string{}, "", err
 	}
 
+	if tagCSV != "" {
+		rawTags := strings.Split(tagCSV, ",")
+		for _, t := range rawTags {
+			trimmed := strings.TrimSpace(t)
+			if trimmed != "" {
+				tag = append(tag, trimmed)
+			}
+		}
+	}
 	body = strings.Join(fs.Args(), " ")
-
 	return tag, body, nil
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -11,7 +12,7 @@ type FileInfo struct {
 	title     string
 	fullPath  string
 	entryTime string
-	tags      string
+	tags      []string
 }
 
 const VaultPath = "/Users/trevornance/Documents/My Vault/Daily Writing/"
@@ -62,11 +63,12 @@ func writeToFile(f FileInfo) {
 		fmt.Printf("Error: %s\nFile: %s", err, f.title)
 	}
 	defer file.Close()
-	if f.tags != "" {
-		contentToWrite := fmt.Sprintf("- [%s] %s #%s\n\n", f.entryTime, f.content, f.tags)
+	if len(f.tags) == 0 {
+		contentToWrite := fmt.Sprintf("- [%s] %s\n\n", f.entryTime, f.content)
 		file.WriteString(contentToWrite)
 	} else {
-		contentToWrite := fmt.Sprintf("- [%s] %s\n\n", f.entryTime, f.content)
+		tagText := "#" + strings.Join(f.tags, " #")
+		contentToWrite := fmt.Sprintf("- [%s] %s %s\n\n", f.entryTime, f.content, tagText)
 		file.WriteString(contentToWrite)
 	}
 }
@@ -78,7 +80,7 @@ func getDateTime() (fTime, fDate string) {
 	return formattedTime, formattedDate
 }
 
-func createNewFileStruct(time, date, entry, tags string) FileInfo {
+func createNewFileStruct(time, date, entry string, tags []string) FileInfo {
 	extension := ".md"
 	fullPath := VaultPath + date + extension
 
