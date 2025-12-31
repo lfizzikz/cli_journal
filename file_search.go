@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -55,12 +56,16 @@ func FilesToSearch(opts SearchOptions) ([]string, error) {
 		}
 		hasFrom = true
 	}
+	noDateFilters := opts.Date == "" && opts.From == "" && opts.Year == "" && opts.To == ""
 	for _, file := range files {
 		filename := file.Name()
 		if strings.HasPrefix(filename, ".") || !strings.HasSuffix(filename, ".md") {
 			continue
 		}
 		basename := strings.TrimSuffix(filename, ".md")
+		if noDateFilters {
+			filestoSearch = append(filestoSearch, filename)
+		}
 		fileDate, err := time.Parse("2006-01-02", basename)
 		if err != nil {
 			continue
@@ -90,4 +95,65 @@ func FilesToSearch(opts SearchOptions) ([]string, error) {
 		}
 	}
 	return filestoSearch, nil
+}
+
+func SearchInFile(files []string, opts SearchOptions) ([]string, error) {
+	searchFound := []string{}
+	for _, file := range files {
+		contains, err := FileContainsAll(file, opts)
+		if err != nil {
+			return []string{}, err
+		}
+		if contains {
+			searchFound = append(searchFound, file)
+		}
+	}
+	return searchFound, nil
+}
+
+func FileContainsAll(file string, opts SearchOptions) (bool, error) {
+	found := make(map[string]bool)
+	file = VaultPath + file
+	f, err := os.Open(file)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		for _, q := range opts.Query {
+			if strings.Contains(line, q) {
+				found["q:"+q] = true
+			}
+		}
+
+		for _, t := range opts.Tags {
+			tags := "#" + t
+			if strings.Contains(line, tags) {
+				found["t:"+t] = true
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return false, err
+	}
+
+	for _, q := range opts.Query {
+		if !found["q:"+q] {
+			return false, nil
+		}
+	}
+
+	for _, t := range opts.Tags {
+		if !found["t:"+t] {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }

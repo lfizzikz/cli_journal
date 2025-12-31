@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 )
@@ -39,7 +40,14 @@ func main() {
 		if len(files) == 0 {
 			fmt.Println("no files found.")
 		} else {
-			fmt.Println(files)
+			foundFiles, err := SearchInFile(files, opts)
+			if err != nil {
+				fmt.Println("error on search:", err)
+				os.Exit(1)
+			}
+			for i, f := range foundFiles {
+				fmt.Printf("%2d) %s\n", i+1, f)
+			}
 		}
 	case "add":
 		tag, body, err := ParseAddFlags(os.Args[2:])
@@ -50,7 +58,23 @@ func main() {
 		fTime, fDate := getDateTime()
 		newFile := createNewFileStruct(fTime, fDate, body, tag)
 		writeToFile(newFile)
+	case "open":
+		file, err := ParseOpenFlags(os.Args[2:])
+		if err != nil {
+			fmt.Println("open parse error", err)
+			os.Exit(1)
+		}
+		if err = openInObsidian(file); err != nil {
+			fmt.Println("open obsidian error:", err)
+			os.Exit(1)
+		}
 	}
+}
+
+func openInObsidian(file string) error {
+	v := "obsidian://open?vault=My%20Vault&file=Daily%20Writing/" + file
+	cmd := exec.Command("open", v)
+	return cmd.Run()
 }
 
 func writeToFile(f FileInfo) {

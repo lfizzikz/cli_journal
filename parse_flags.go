@@ -54,3 +54,24 @@ func ParseAddFlags(args []string) (tag []string, body string, err error) {
 	body = strings.Join(fs.Args(), " ")
 	return tag, body, nil
 }
+
+func ParseOpenFlags(args []string) (file string, err error) {
+	fs := flag.NewFlagSet("open", flag.ContinueOnError)
+
+	fs.StringVar(&file, "open", "", "Opens file in Obsidian")
+
+	if err := fs.Parse(args); err != nil {
+		return "", err
+	}
+	if file == "" {
+		rest := fs.Args()
+		if len(rest) > 0 {
+			file = rest[0]
+		}
+	}
+	file = strings.TrimSpace(file)
+	if file != "" && !strings.HasSuffix(file, ".md") {
+		file += ".md"
+	}
+	return file, nil
+}
