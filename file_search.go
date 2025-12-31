@@ -11,6 +11,7 @@ import (
 type SearchOptions struct {
 	Date  string
 	Year  string
+	Month string
 	From  string
 	To    string
 	Tags  []string
@@ -21,9 +22,10 @@ func FilesToSearch(opts SearchOptions) ([]string, error) {
 	var filestoSearch []string
 	var dateSearch time.Time
 	var yearSearch time.Time
+	var monthSearch time.Time
 	var toSearch time.Time
 	var fromSearch time.Time
-	var hasDate, hasTo, hasFrom, hasYear bool
+	var hasDate, hasTo, hasFrom, hasYear, hasMonth bool
 	files, err := os.ReadDir(VaultPath)
 	if err != nil {
 		return []string{}, err
@@ -42,6 +44,20 @@ func FilesToSearch(opts SearchOptions) ([]string, error) {
 		}
 		hasYear = true
 	}
+	if opts.Month != "" {
+		monthSearch, err = time.Parse("January", opts.Month)
+		if err != nil {
+			monthSearch, err = time.Parse("01", opts.Month)
+		}
+		if err != nil {
+			monthSearch, err = time.Parse("1", opts.Month)
+		}
+		if err != nil {
+			fmt.Println("month parse failed:", err)
+		} else {
+			hasMonth = true
+		}
+	}
 	if opts.To != "" {
 		toSearch, err = time.Parse("2006-01-02", opts.To)
 		if err != nil {
@@ -56,7 +72,7 @@ func FilesToSearch(opts SearchOptions) ([]string, error) {
 		}
 		hasFrom = true
 	}
-	noDateFilters := opts.Date == "" && opts.From == "" && opts.Year == "" && opts.To == ""
+	noDateFilters := opts.Date == "" && opts.From == "" && opts.Year == "" && opts.To == "" && opts.Month == ""
 	for _, file := range files {
 		filename := file.Name()
 		if strings.HasPrefix(filename, ".") || !strings.HasSuffix(filename, ".md") {
@@ -88,8 +104,17 @@ func FilesToSearch(opts SearchOptions) ([]string, error) {
 			if fileDate.After(fromSearch) {
 				filestoSearch = append(filestoSearch, filename)
 			}
+		case hasYear && hasMonth:
+			if (fileDate.Month() == monthSearch.Month()) &&
+				(fileDate.Year() == yearSearch.Year()) {
+				filestoSearch = append(filestoSearch, filename)
+			}
 		case hasYear:
 			if fileDate.Year() == yearSearch.Year() {
+				filestoSearch = append(filestoSearch, filename)
+			}
+		case hasMonth:
+			if fileDate.Month() == monthSearch.Month() {
 				filestoSearch = append(filestoSearch, filename)
 			}
 		}
