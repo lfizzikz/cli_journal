@@ -45,9 +45,11 @@ func main() {
 				fmt.Println("error on search:", err)
 				os.Exit(1)
 			}
-			for i, f := range foundFiles {
-				fmt.Printf("%2d) %s\n", i+1, f)
+			fileToOpen, err := ListFilesAndSearch(foundFiles)
+			if err != nil {
+				fmt.Println("error on listing files:", err)
 			}
+			openInObsidian(fileToOpen)
 		}
 	case "add":
 		tag, body, err := ParseAddFlags(os.Args[2:])
