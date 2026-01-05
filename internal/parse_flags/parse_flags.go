@@ -1,14 +1,16 @@
-package main
+package parseflags
 
 import (
 	"flag"
+	filesearch "odn/internal/file_search"
 	"strings"
+	"time"
 )
 
-func ParseSearchFlags(args []string) (SearchOptions, error) {
+func ParseSearchFlags(args []string) (filesearch.SearchOptions, error) {
 	fs := flag.NewFlagSet("search", flag.ContinueOnError)
 
-	var opts SearchOptions
+	var opts filesearch.SearchOptions
 	var tagsList string
 	var queryList string
 
@@ -21,7 +23,7 @@ func ParseSearchFlags(args []string) (SearchOptions, error) {
 	fs.StringVar(&queryList, "query", "", "search words, comma-seperated (together, seperate)")
 
 	if err := fs.Parse(args); err != nil {
-		return SearchOptions{}, err
+		return filesearch.SearchOptions{}, err
 	}
 	if tagsList != "" {
 		opts.Tags = strings.Split(tagsList, ",")
@@ -59,8 +61,6 @@ func ParseAddFlags(args []string) (tag []string, body string, err error) {
 func ParseOpenFlags(args []string) (file string, err error) {
 	fs := flag.NewFlagSet("open", flag.ContinueOnError)
 
-	fs.StringVar(&file, "open", "", "Opens file in Obsidian")
-
 	if err := fs.Parse(args); err != nil {
 		return "", err
 	}
@@ -71,6 +71,9 @@ func ParseOpenFlags(args []string) (file string, err error) {
 		}
 	}
 	file = strings.TrimSpace(file)
+	if file == "today" {
+		file = time.Now().Format("2006-01-02")
+	}
 	if file != "" && !strings.HasSuffix(file, ".md") {
 		file += ".md"
 	}

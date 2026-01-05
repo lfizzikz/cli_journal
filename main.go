@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"odn/internal/config"
+	filesearch "odn/internal/file_search"
+	parseflags "odn/internal/parse_flags"
 	"os"
 	"os/exec"
 	"strings"
@@ -16,8 +19,6 @@ type FileInfo struct {
 	tags      []string
 }
 
-const VaultPath = "/Users/trevornance/Documents/My Vault/Daily Writing/"
-
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("expected command: search | add")
@@ -26,13 +27,13 @@ func main() {
 
 	switch os.Args[1] {
 	case "search":
-		opts, err := ParseSearchFlags(os.Args[2:])
+		opts, err := parseflags.ParseSearchFlags(os.Args[2:])
 		if err != nil {
 			fmt.Println("error after parse search:", err)
 			os.Exit(1)
 		}
 
-		files, err := FilesToSearch(opts)
+		files, err := filesearch.FilesToSearch(opts)
 		if err != nil {
 			fmt.Println("error after finding files to search:", err)
 			os.Exit(1)
@@ -40,19 +41,19 @@ func main() {
 		if len(files) == 0 {
 			fmt.Println("no files found.")
 		} else {
-			foundFiles, err := SearchInFile(files, opts)
+			foundFiles, err := filesearch.SearchInFile(files, opts)
 			if err != nil {
 				fmt.Println("error on search:", err)
 				os.Exit(1)
 			}
-			fileToOpen, err := ListFilesAndSearch(foundFiles)
+			fileToOpen, err := filesearch.ListFilesAndSearch(foundFiles)
 			if err != nil {
 				fmt.Println("error on listing files:", err)
 			}
 			openInObsidian(fileToOpen)
 		}
 	case "add":
-		tag, body, err := ParseAddFlags(os.Args[2:])
+		tag, body, err := parseflags.ParseAddFlags(os.Args[2:])
 		if err != nil {
 			fmt.Println("add parse error:", err)
 			os.Exit(1)
@@ -61,7 +62,7 @@ func main() {
 		newFile := createNewFileStruct(fTime, fDate, body, tag)
 		writeToFile(newFile)
 	case "open":
-		file, err := ParseOpenFlags(os.Args[2:])
+		file, err := parseflags.ParseOpenFlags(os.Args[2:])
 		if err != nil {
 			fmt.Println("open parse error", err)
 			os.Exit(1)
@@ -108,7 +109,7 @@ func getDateTime() (fTime, fDate string) {
 
 func createNewFileStruct(time, date, entry string, tags []string) FileInfo {
 	extension := ".md"
-	fullPath := VaultPath + date + extension
+	fullPath := config.VaultPath + date + extension
 
 	newFile := FileInfo{
 		content:   entry,
