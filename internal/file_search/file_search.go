@@ -1,22 +1,23 @@
-package main
+package filesearch
 
 import (
 	"bufio"
 	"fmt"
+	"odn/internal/config"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
 
 type SearchOptions struct {
-	Date  string
-	Year  string
-	Month string
-	From  string
-	To    string
-	Tags  []string
-	Query []string
+	Date     string
+	Year     string
+	Month    string
+	From     string
+	To       string
+	Tags     []string
+	Query    []string
+	BodyText string
 }
 
 func FilesToSearch(opts SearchOptions) ([]string, error) {
@@ -27,7 +28,7 @@ func FilesToSearch(opts SearchOptions) ([]string, error) {
 	var toSearch time.Time
 	var fromSearch time.Time
 	var hasDate, hasTo, hasFrom, hasYear, hasMonth bool
-	files, err := os.ReadDir(VaultPath)
+	files, err := os.ReadDir(config.VaultPath)
 	if err != nil {
 		return []string{}, err
 	}
@@ -139,7 +140,7 @@ func SearchInFile(files []string, opts SearchOptions) ([]string, error) {
 
 func FileContainsAll(file string, opts SearchOptions) (bool, error) {
 	found := make(map[string]bool)
-	file = VaultPath + file
+	file = config.VaultPath + file
 	f, err := os.Open(file)
 	if err != nil {
 		return false, err
@@ -182,38 +183,4 @@ func FileContainsAll(file string, opts SearchOptions) (bool, error) {
 	}
 
 	return true, nil
-}
-func ListFilesAndSearch(files []string) (string, error) {
-	scanner := bufio.NewScanner(os.Stdin)
-
-	for i, f := range files {
-		fmt.Printf("%d) %s\n", i+1, f)
-	}
-
-	for {
-		fmt.Println("")
-		fmt.Print("Select a number to open (or q to quit) > ")
-
-		ok := scanner.Scan()
-		if !ok {
-			break
-		}
-
-		input := strings.TrimSpace(scanner.Text())
-		if input == "" {
-			continue
-		}
-		if input == "q" {
-			fmt.Println("Exiting")
-			break
-		}
-
-		fileNumber, err := strconv.Atoi(input)
-		if err != nil {
-			fmt.Println("Please enter only numbers shown")
-			return "", err
-		}
-		return files[fileNumber-1], nil
-	}
-	return "", nil
 }
