@@ -8,16 +8,16 @@ import (
 	"strings"
 )
 
-func ListFilesAndSearch(files []string) (string, error) {
+func ListFilesAndSearch(files []SearchResult) (string, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for i, f := range files {
-		fmt.Printf("%d) %s\n", i+1, f)
+		fmt.Printf("%d) %s -%s\n", i+1, f.File, f.FirstSentence)
 	}
 
 	for {
 		fmt.Println("")
-		fmt.Print("Select a number to open (or q to quit) > ")
+		fmt.Print("Input number to open (q to quit) > ")
 
 		ok := scanner.Scan()
 		if !ok {
@@ -25,20 +25,23 @@ func ListFilesAndSearch(files []string) (string, error) {
 		}
 
 		input := strings.TrimSpace(scanner.Text())
+		numInput, _ := strconv.Atoi(input)
 		if input == "" {
 			continue
 		}
 		if input == "q" {
-			fmt.Println("Exiting")
-			break
+			os.Exit(1)
 		}
 
+		if numInput > len(files) {
+			fmt.Println("Enter a valid number")
+			continue
+		}
 		fileNumber, err := strconv.Atoi(input)
 		if err != nil {
-			fmt.Println("Please enter only numbers shown")
 			return "", err
 		}
-		return files[fileNumber-1], nil
+		return files[fileNumber-1].File, nil
 	}
 	return "", nil
 }

@@ -20,6 +20,11 @@ type SearchOptions struct {
 	BodyText string
 }
 
+type SearchResult struct {
+	File          string
+	FirstSentence string
+}
+
 func FilesToSearch(opts SearchOptions) ([]string, error) {
 	var filestoSearch []string
 	var dateSearch time.Time
@@ -124,30 +129,34 @@ func FilesToSearch(opts SearchOptions) ([]string, error) {
 	return filestoSearch, nil
 }
 
-func SearchInFile(files []string, opts SearchOptions) ([]string, error) {
-	searchFound := []string{}
+func SearchInFile(files []string, opts SearchOptions) ([]SearchResult, error) {
+	searchFound := []SearchResult{}
 	for _, file := range files {
-		contains, err := FileContainsAll(file, opts)
+		contains, firstSentence, err := FileContainsAll(file, opts)
 		if err != nil {
-			return []string{}, err
+			return []SearchResult{}, err
 		}
 		if contains {
-			searchFound = append(searchFound, file)
+			searchFound = append(searchFound, SearchResult{
+				File:          file,
+				FirstSentence: firstSentence,
+			})
 		}
 	}
 	return searchFound, nil
 }
 
-func FileContainsAll(file string, opts SearchOptions) (bool, error) {
+func FileContainsAll(file string, opts SearchOptions) (bool, string, error) {
 	found := make(map[string]bool)
 	file = config.VaultPath + file
 	f, err := os.Open(file)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	firstSentence := getFirstSentence(scanner)
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -167,20 +176,31 @@ func FileContainsAll(file string, opts SearchOptions) (bool, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	for _, q := range opts.Query {
 		if !found["q:"+q] {
-			return false, nil
+			return false, "", err
 		}
 	}
 
 	for _, t := range opts.Tags {
 		if !found["t:"+t] {
-			return false, nil
+			return false, "", err
 		}
 	}
+	return true, firstSentence, nil
+}
 
-	return true, nil
+func getFirstSentence(scanner *bufio.Scanner) (sentence string) {
+	for scanner.Scan() {
+		line := scanner.Text()
+		for i, r := range line {
+			if r == '.' || r == '!' || r == '?' {
+				return strings.TrimSpace(line[:i+1])
+			}
+		}
+	}
+	return "error getting sentence"
 }
