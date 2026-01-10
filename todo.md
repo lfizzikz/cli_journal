@@ -6,6 +6,10 @@
     - vault path
     - different editor
     - etc.
+- ability to open the file back up in editor of choice
+    - obsidian
+    - nvim
+    - etc.
 
 
 # Finished

@@ -6,7 +6,6 @@ import (
 	filesearch "odn/internal/file_search"
 	parseflags "odn/internal/parse_flags"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
 )
@@ -21,7 +20,7 @@ type FileInfo struct {
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("expected command: search | add")
+		fmt.Println("expected command: search | add | open")
 		os.Exit(1)
 	}
 
@@ -72,12 +71,6 @@ func main() {
 			os.Exit(1)
 		}
 	}
-}
-
-func openInObsidian(file string) error {
-	v := "obsidian://open?vault=My%20Vault&file=Daily%20Writing/" + file
-	cmd := exec.Command("open", v)
-	return cmd.Run()
 }
 
 func writeToFile(f FileInfo) {
