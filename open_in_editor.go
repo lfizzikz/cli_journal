@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"odn/internal/config"
+	"os"
 	"os/exec"
 	"path/filepath"
 )
@@ -13,7 +15,27 @@ func openInObsidian(file string) error {
 }
 
 func openInNvim(file string) error {
-	fileToOpen := filepath.Join(config.VaultPath, file)
-	cmd := exec.Command("nvim", fileToOpen)
+	f := filepath.Join(config.VaultPath, file)
+	cmd := exec.Command("nvim", f)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+func OpenInDefaultEditor(file string) error {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	if cfg.Editor == "nvim" {
+		openInNvim(file)
+		return nil
+	}
+	if cfg.Editor == "obsidian" {
+		openInObsidian(file)
+		return nil
+	}
+	return errors.New("couldnt open in editor")
 }

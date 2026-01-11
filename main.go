@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"odn/internal/config"
 	filesearch "odn/internal/file_search"
 	parseflags "odn/internal/parse_flags"
@@ -49,25 +50,60 @@ func main() {
 			if err != nil {
 				fmt.Println("error on listing files:", err)
 			}
-			openInObsidian(fileToOpen)
+			OpenInDefaultEditor(fileToOpen)
 		}
 	case "add":
-		tag, body, err := parseflags.ParseAddFlags(os.Args[2:])
+		tag, body, emptyBody, err := parseflags.ParseAddFlags(os.Args[2:])
 		if err != nil {
 			fmt.Println("add parse error:", err)
 			os.Exit(1)
 		}
-		fTime, fDate := getDateTime()
-		newFile := createNewFileStruct(fTime, fDate, body, tag)
-		writeToFile(newFile)
+		if emptyBody {
+			data, err := io.ReadAll(os.Stdin)
+			if err != nil {
+				fmt.Println("error reading stdin:", err)
+				os.Exit(1)
+			}
+			StdinBody := strings.TrimRight(string(data), "\n")
+			if strings.TrimSpace(StdinBody) == "" {
+				fmt.Println("note body is required")
+				os.Exit(1)
+			}
+			fTime, fDate := getDateTime()
+			newFile := createNewFileStruct(fTime, fDate, StdinBody, tag)
+			writeToFile(newFile)
+		}
+		if !emptyBody {
+			fTime, fDate := getDateTime()
+			newFile := createNewFileStruct(fTime, fDate, body, tag)
+			writeToFile(newFile)
+		}
 	case "open":
 		file, err := parseflags.ParseOpenFlags(os.Args[2:])
 		if err != nil {
 			fmt.Println("open parse error", err)
 			os.Exit(1)
 		}
-		if err = openInObsidian(file); err != nil {
+		if err = OpenInDefaultEditor(file); err != nil {
 			fmt.Println("open obsidian error:", err)
+			os.Exit(1)
+		}
+	case "config":
+		if len(os.Args) > 2 && os.Args[2] == "default" {
+			cfg := config.Default()
+			if err := config.SaveConfig(cfg); err != nil {
+				fmt.Println("error saving default config", err)
+				os.Exit(1)
+			}
+			return
+		}
+		cfg, err := parseflags.ParseConfigFlags(os.Args[2:])
+		if err != nil {
+			fmt.Println("config parse error", err)
+			os.Exit(1)
+		}
+		if err := config.SaveConfig(cfg); err != nil {
+			fmt.Println("error saving config", err)
 			os.Exit(1)
 		}
 	}

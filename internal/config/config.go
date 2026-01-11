@@ -1,10 +1,10 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const VaultPath = "/Users/trevornance/Documents/My Vault/Daily Writing/"
-
-var EditorToUse = "nvim"
 
 type Editor string
 
@@ -14,12 +14,14 @@ const (
 )
 
 type Config struct {
-	Editor Editor `json:"editor"`
+	Editor    Editor `json:"editor"`
+	VaultPath string `json:"vault_path"`
 }
 
 func Default() Config {
 	return Config{
-		Editor: EditorNvim,
+		Editor:    EditorNvim,
+		VaultPath: VaultPath,
 	}
 }
 

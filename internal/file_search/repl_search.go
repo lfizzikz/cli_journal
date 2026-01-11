@@ -12,12 +12,12 @@ func ListFilesAndSearch(files []SearchResult) (string, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for i, f := range files {
-		fmt.Printf("%d) %s -%s\n", i+1, f.File, f.FirstSentence)
+		fmt.Printf("%d) %s %s\n", i+1, f.File, f.FirstSentence)
 	}
 
 	for {
 		fmt.Println("")
-		fmt.Print("Input number to open (q to quit) > ")
+		fmt.Print("('q' to quit) > ")
 
 		ok := scanner.Scan()
 		if !ok {
