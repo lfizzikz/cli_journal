@@ -2,14 +2,6 @@
 
 - search for and list all tags. like -listtags
     - show how many times each tag was used
-- config file support
-    - vault path
-    - different editor
-    - etc.
-- ability to open the file back up in editor of choice
-    - obsidian
-    - nvim
-    - etc.
 
 
 # Finished
@@ -17,3 +9,11 @@
 - Show preview snippet of file per result
     - 1) 2025-12-12.md "Here is the brief snippet of text..."
     - everything up to the first punctuation should be shown
+- ability to open the file back up in editor of choice
+    - obsidian
+    - nvim
+    - etc.
+- config file support
+    - vault path
+    - different editor
+    - etc.

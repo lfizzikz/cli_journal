@@ -6,14 +6,9 @@ import (
 	"time"
 )
 
-
-
 func ParseOpenFlags(args []string) (file string, err error) {
 	fs := flag.NewFlagSet("open", flag.ContinueOnError)
 
-	var toOpen string
-
-	fs.StringVar(&toOpen, "nvim", "", "open file in nvim")
 	if err := fs.Parse(args); err != nil {
 		return "", err
 	}
